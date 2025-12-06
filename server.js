@@ -36,7 +36,7 @@ requiredEnv.forEach((key) => {
 
 // ✅ Enforce CORS globally (allows frontend to call API)
 // This middleware ensures the server responds with appropriate
-// Access-Control-Allow-* headers for requests coming from the
+// Access-Control-Allow-* headers for reques coming from the
 // frontend (localhost:3000) or deployed frontend URL.
 app.use(
   cors({
