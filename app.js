@@ -6,45 +6,37 @@ const path = require('path');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
-// Load env (local only)
+// Load env only in development
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
 }
 
-// 🔥 REQUIRED FOR RENDER (VERY IMPORTANT)
-app.set('trust proxy', 1);
-
-// ==========================================
-// 🚀 CORS — MUST BE FIRST
-// ==========================================
+// ==================================================
+// 🔥 FINAL CORS CONFIG (PRODUCTION SAFE)
+// ==================================================
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL,       // https://shopify-frontend-wheat.vercel.app
-      process.env.FRONTEND_URL_2,     // preview vercel URL (optional)
-      'http://localhost:3000'
-    ],
+    origin: "https://shopify-frontend-wheat.vercel.app",
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   })
 );
 
-// Preflight
-app.options('*', cors());
+// Preflight requests
+app.options("*", cors());
 
-// ==========================================
-// 🚀 Core Middleware
-// ==========================================
+// ==================================================
+// Core Middleware
+// ==================================================
 app.use(express.json());
 app.use(cookieParser());
 
-// Static
+// Static uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ==========================================
-// 🚀 Routes
-// ==========================================
+// ==================================================
+// Routes
+// ==================================================
 const products = require('./routes/product');
 const auth = require('./routes/auth');
 const order = require('./routes/order');
@@ -53,9 +45,9 @@ app.use('/api/v1', products);
 app.use('/api/v1', auth);
 app.use('/api/v1', order);
 
-// ==========================================
-// 🚀 Error Middleware (LAST)
-// ==========================================
+// ==================================================
+// Error Middleware (ALWAYS LAST)
+// ==================================================
 app.use(errorMiddleware);
 
 module.exports = app;
