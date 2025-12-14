@@ -6,34 +6,32 @@ const path = require('path');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
-// Load environment variables (only in development)
+// Load env (local only)
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
 }
 
+// 🔥 REQUIRED FOR RENDER (VERY IMPORTANT)
+app.set('trust proxy', 1);
+
 // ==========================================
-// 🚀 CORS FIX — MUST BE BEFORE ROUTES
+// 🚀 CORS — MUST BE FIRST
 // ==========================================
 app.use(
   cors({
     origin: [
-      process.env.FRONTEND_URL,      // main vercel domain
-      process.env.FRONTEND_URL_2,    // preview vercel domain
-      "http://localhost:3000"        // local dev
+      process.env.FRONTEND_URL,       // https://shopify-frontend-wheat.vercel.app
+      process.env.FRONTEND_URL_2,     // preview vercel URL (optional)
+      'http://localhost:3000'
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
-// Handle OPTIONS preflight
-app.options("*", cors());
-
-// Allow cookies
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
+// Preflight
+app.options('*', cors());
 
 // ==========================================
 // 🚀 Core Middleware
@@ -41,38 +39,22 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(cookieParser());
 
-// Uploads Folder
+// Static
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve public folder (images, CSS, static files)
-app.use('/images', express.static(path.join(__dirname, '../frontend/public/images')));
-app.use(express.static(path.join(__dirname, '../frontend/public')));
-
 // ==========================================
-// 🚀 Import Routes
+// 🚀 Routes
 // ==========================================
 const products = require('./routes/product');
 const auth = require('./routes/auth');
 const order = require('./routes/order');
 
-// Use Routes
 app.use('/api/v1', products);
 app.use('/api/v1', auth);
 app.use('/api/v1', order);
 
 // ==========================================
-// 🚀 Serve Frontend (Production Only)
-// ==========================================
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build/index.html'));
-  });
-}
-
-// ==========================================
-// 🚀 Error Middleware (Always Last)
+// 🚀 Error Middleware (LAST)
 // ==========================================
 app.use(errorMiddleware);
 
